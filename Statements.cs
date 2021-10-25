@@ -140,10 +140,12 @@ namespace Interpreter {
 	class classStmt : stmt{
 		public token name;
 		public List<stmt> methods;
+		public varExpr superClass;
 
-		public classStmt(token _name, List<stmt> _methods) {
+		public classStmt(token _name, List<stmt> _methods, varExpr _superClass) {
 			name = _name;
 			methods = _methods;
+			superClass = _superClass;
 		}
 
 		public override T accept<T>(visitor<T> vis) {

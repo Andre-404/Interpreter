@@ -195,6 +195,11 @@ namespace Interpreter {
 
 		private stmt classStatement() {
 			token name = consume(TokenType.IDENTIFIER, "Expect class name.");
+			varExpr superclass = null;
+			if(match(TokenType.COLON)) {
+				consume(TokenType.IDENTIFIER, "Expect superclass name.");
+				superclass = new varExpr(previous());
+			}
 			consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
 
 			List<stmt> methods = new List<stmt>();
@@ -204,7 +209,7 @@ namespace Interpreter {
 
 			consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
 
-			return new classStmt(name, methods);
+			return new classStmt(name, methods, superclass);
 		}
 		#endregion
 
@@ -409,7 +414,14 @@ namespace Interpreter {
 			//if this is a identifier, we know that this is a variable name, so we return a expression containing the name of the variable
 			if(match(TokenType.IDENTIFIER)) return new varExpr(previous());
 			if(match(TokenType.THIS)) return new thisExpr(previous());
-			
+
+			if(match(TokenType.SUPER)) {
+				token keyword = previous();
+				consume(TokenType.DOT, "Expect '.' after 'super'.");
+				token method = consume(TokenType.IDENTIFIER, "Expect superclass method name.");
+				return new superExpr(keyword, method);
+			}
+
 			//if we have "(" ahead, then we know we have a grouping
 			if(match(TokenType.LEFT_PAREN)) {
 				expr Expr = expression();//generate a expression inside the parentheses

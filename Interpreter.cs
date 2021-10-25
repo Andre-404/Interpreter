@@ -266,6 +266,21 @@ namespace Interpreter {
 		public object visitThis(thisExpr expression) {
 			return lookUpVar(expression.keyword, expression);
 		}
+
+		public object visitSuper(superExpr expression) {
+			int dist = locals[expression];
+			loxClass superclass = (loxClass)(Enviroment.getAt(dist, "super"));
+
+			loxInstance obj = (loxInstance)(Enviroment.getAt(dist - 1, "this"));
+
+			loxFunction method = superclass.findMethod(expression.method.lexeme);
+
+			if(method == null) {
+				throw new RuntimeError(expression.method, "Undefined property '" + expression.method.lexeme + "'.");
+			}
+
+			return method.bind(obj);
+		}
 		#endregion
 
 		#region Statements
@@ -348,7 +363,21 @@ namespace Interpreter {
 		}
 
 		public object visitClass(classStmt statement) {
+
+			object superClass = null;
+			if(statement.superClass != null) {
+				superClass = evaluate(statement.superClass);
+				if(!(superClass is loxClass)) {
+					throw new RuntimeError(statement.superClass.name, "Superclass must be a class.");
+				}
+			}
+
 			Enviroment.define(statement.name.lexeme, null);
+
+			if(statement.superClass != null) {
+				Enviroment = new enviroment(Enviroment);
+				Enviroment.define("super", superClass);
+			}
 
 			Dictionary<string, loxFunction> methods = new Dictionary<string, loxFunction>();
 			foreach(funcStmt method in statement.methods) {
@@ -358,7 +387,11 @@ namespace Interpreter {
 				}
 			}
 
-			loxClass klass = new loxClass(statement.name.lexeme, methods);
+			loxClass klass = new loxClass(statement.name.lexeme, (loxClass)superClass, methods);
+
+			if(superClass != null) {
+				Enviroment = Enviroment.enclosing;
+			}
 
 			Enviroment.assign(statement.name, klass);
 			return null;

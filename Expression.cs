@@ -21,6 +21,8 @@ namespace Interpreter {
 			public T visitGet(getExpr expression);
 			public T visitSet(setExpr expression);
 			public T visitThis(thisExpr expression);
+			public T visitSuper(superExpr expression);
+
 		}
 	}
 
@@ -167,7 +169,19 @@ namespace Interpreter {
 			return vis.visitThis(this);
 		}
 	}
+	class superExpr : expr {
+		public token keyword;
+		public token method;
 
+		public superExpr(token _keyword, token _method) {
+			keyword = _keyword;
+			method = _method;
+		}
+
+		public override T accept<T>(visitor<T> vis) {
+			return vis.visitSuper(this);
+		}
+	}
 
 	class AstPrinter : expr.visitor<string> {
 
@@ -221,6 +235,10 @@ namespace Interpreter {
 		}
 		public string visitThis(thisExpr expression) {
 			return "This";
+		}
+
+		public string visitSuper(superExpr expression) {
+			return "Called the superclass's method: " + expression.method.lexeme;
 		}
 
 		private string parenthesize(string name, expr[] exprs) {

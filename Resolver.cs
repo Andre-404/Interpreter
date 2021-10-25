@@ -149,6 +149,21 @@ namespace Interpreter {
 
 			declare(statement.name);
 			define(statement.name);
+
+			if(statement.superClass != null && statement.name.lexeme.Equals(statement.superClass.name.lexeme)) {
+				Lox.error(statement.superClass.name, "A class can't inherit from itself.");
+			}
+
+			if(statement.superClass != null) {
+				currentClass = ClassType.SUBCLASS;
+				resolve(statement.superClass);
+			}
+
+			if(statement.superClass != null) {
+				beginScope();
+				scopes.Peek().Add("super", true);
+			}
+
 			beginScope();
 			scopes.Peek().Add("this", true);
 
@@ -160,6 +175,7 @@ namespace Interpreter {
 				resolveFunction(method, type);
 			}
 			endScope();
+			if(statement.superClass != null) endScope();
 			currentClass = enclosingClass;
 
 			return null;
@@ -168,7 +184,8 @@ namespace Interpreter {
 
 		#region Expressions
 		public object visitVar(varExpr expression) {
-			if(scopes.Count > 0 && scopes.Peek()[expression.name.lexeme] == false) {
+			bool tryVal;
+			if(scopes.Count > 0 && scopes.Peek().TryGetValue(expression.name.lexeme, out tryVal) && tryVal == false){
 				Lox.error(expression.name, "Can't read local variable in its own initializer.");
 			}
 			resolveLocal(expression, expression.name);
@@ -235,6 +252,18 @@ namespace Interpreter {
 					"Can't use 'this' outside of a class.");
 				return null;
 			}
+			return null;
+		}
+
+		public object visitSuper(superExpr expression) {
+			if(currentClass == ClassType.NONE) {
+				Lox.error(expression.keyword,
+					"Can't use 'super' outside of a class.");
+			} else if(currentClass != ClassType.SUBCLASS) {
+				Lox.error(expression.keyword,
+					"Can't use 'super' in a class with no superclass.");
+			}
+			resolveLocal(expression, expression.keyword);
 			return null;
 		}
 

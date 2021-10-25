@@ -8,10 +8,12 @@ namespace Interpreter {
 	class loxClass : LoxCallable {
 		public string name;
 		private Dictionary<string, loxFunction> methods;
+		public loxClass superClass;
 
-		public loxClass(string _name, Dictionary<string, loxFunction> _methods) {
+		public loxClass(string _name, loxClass _superClass, Dictionary<string, loxFunction> _methods) {
 			name = _name;
 			methods = _methods;
+			superClass = _superClass;
 
 		}
 
@@ -40,6 +42,10 @@ namespace Interpreter {
 			if(methods.ContainsKey(name)) {
 				loxFunction func;
 				if(methods.TryGetValue(name, out func)) return func;
+			}
+
+			if(superClass != null) {
+				return superClass.findMethod(name);
 			}
 
 			return null;
