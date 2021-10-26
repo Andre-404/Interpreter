@@ -55,12 +55,13 @@ namespace Interpreter {
 		}
 
 		public object getAt(int dist, string name) {
-			return ancestor(dist).values[name];
+			return ancestor(dist).values[name];//gets a variable from "dist" environments away
 		}
 
 		public enviroment ancestor(int dist) {
 			enviroment Env = this;
 
+			//we loop for the dist to find the environemnt we need
 			for(int i = 0; i < dist; i++) {
 				Env = Env.enclosing;
 			}
@@ -69,6 +70,7 @@ namespace Interpreter {
 		}
 
 		public void assignAt(int dist, token name, object value) {
+			//adds a variable to a environemnt dist hops away
 			if(!ancestor(dist).values.TryAdd(name.lexeme, value)) {
 				ancestor(dist).values[name.lexeme] = value;
 			}

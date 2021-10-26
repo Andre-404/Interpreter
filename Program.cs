@@ -7,6 +7,7 @@ namespace Interpreter {
 		// Single-character tokens.
 		LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
 		COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR, COLON,
+		LEFT_BRACK, RIGHT_BRACK,
 
 		// One or two character tokens.
 		BANG, BANG_EQUAL,
@@ -16,7 +17,7 @@ namespace Interpreter {
 		N_INCREMENT, PLUS_EQUALS, MINUS_EQUALS,
 
 		// Literals.
-		IDENTIFIER, STRING, NUMBER,
+		IDENTIFIER, STRING, NUMBER, ARRAY,
 
 		// Keywords.
 		AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL, OR,

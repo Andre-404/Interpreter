@@ -20,6 +20,7 @@ namespace Interpreter {
 			public T visitCall(callExpr expression);
 			public T visitGet(getExpr expression);
 			public T visitSet(setExpr expression);
+			public T visitArraySet(setArrayExpr expression);
 			public T visitThis(thisExpr expression);
 			public T visitSuper(superExpr expression);
 
@@ -144,7 +145,6 @@ namespace Interpreter {
 			return vis.visitGet(this);
 		}
 	}
-
 	class setExpr : expr {
 		public expr obj;
 		public token name;
@@ -180,6 +180,22 @@ namespace Interpreter {
 
 		public override T accept<T>(visitor<T> vis) {
 			return vis.visitSuper(this);
+		}
+	}
+	class setArrayExpr : expr {
+		public expr arr;
+		public expr index;
+		public expr value;
+		public token pos;
+
+		public setArrayExpr(expr _arr, expr _val, expr _index, token _pos) {
+			arr = _arr;
+			value = _val;
+			index = _index;
+			pos = _pos;
+		}
+		public override T accept<T>(visitor<T> vis) {
+			return vis.visitArraySet(this);
 		}
 	}
 
@@ -239,6 +255,10 @@ namespace Interpreter {
 
 		public string visitSuper(superExpr expression) {
 			return "Called the superclass's method: " + expression.method.lexeme;
+		}
+
+		public string visitArraySet(setArrayExpr expression) {
+			return "Setting array value";
 		}
 
 		private string parenthesize(string name, expr[] exprs) {

@@ -89,6 +89,12 @@ namespace Interpreter {
 				case '!':
 					addToken(match('=') ? TokenType.BANG_EQUAL : TokenType.BANG);
 					break;
+				case '[':
+					addToken(match(']') ? TokenType.ARRAY : TokenType.LEFT_BRACK);
+					break;
+				case ']':
+					addToken(TokenType.RIGHT_BRACK);
+					break;
 				case '=':
 					addToken(match('=') ? TokenType.EQUAL_EQUAL : TokenType.EQUAL);
 					break;
@@ -124,9 +130,8 @@ namespace Interpreter {
 						generateNumber();
 					} else if(isAlpha(c)) {
 						generateIdentifier();
-					} else {
+					} else{
 						Lox.error(line, "Unexpected character: " + "'" + c.ToString() + "'.");
-						;
 					}
 					break;
 			}

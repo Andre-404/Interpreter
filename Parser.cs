@@ -226,15 +226,6 @@ namespace Interpreter {
 			if(match(TokenType.EQUAL) || match(TokenType.P_INCREMENT) || match(TokenType.N_INCREMENT) || match(TokenType.PLUS_EQUALS) || match(TokenType.MINUS_EQUALS)) {
 				token equals = previous();
 				expr value;
-				/*if(equals.type == TokenType.EQUAL) value = assignment();//this is the expression we want to set our variable to
-				else {
-					if(equals.type == TokenType.P_INCREMENT) {
-						value = new binaryExpr(Expr, new token(TokenType.PLUS, "+", null, equals.line), new literalExpr((double)1));
-					} else if(equals.type == TokenType.N_INCREMENT){
-						value = new binaryExpr(Expr, new token(TokenType.MINUS, "-", null, equals.line), new literalExpr((double)1));
-					}else if(equals)
-				}*/
-
 				switch(equals.type) {
 					case TokenType.EQUAL:
 						value = assignment();
@@ -262,6 +253,9 @@ namespace Interpreter {
 				}else if(Expr is getExpr) {
 					getExpr get = (getExpr)Expr;
 					return new setExpr(get.obj, get.name, value);
+				}else if(Expr is callExpr && ((callExpr)Expr).paren.type == TokenType.RIGHT_BRACK) {
+					callExpr tempExpr = ((callExpr)Expr);
+					return new setArrayExpr(tempExpr.callee, value, tempExpr.arguments[0], tempExpr.paren);
 				}
 
 				error(equals, "Invalid assignment target.");//if we have a "=" but no expression following it, throw a error
@@ -405,6 +399,8 @@ namespace Interpreter {
 				} else if(match(TokenType.DOT)) {
 					token name = consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
 					Expr = new getExpr(Expr, name);
+				} else if(previous().type == TokenType.IDENTIFIER && match(TokenType.LEFT_BRACK)){
+					Expr = finishCall(Expr);
 				} else {
 					break;
 				}
@@ -415,20 +411,37 @@ namespace Interpreter {
 		}
 
 		private expr finishCall(expr callee) {
-			List<expr> arguments = new List<expr>();
-			if(!check(TokenType.RIGHT_PAREN)) {
-				do {
-					if(arguments.Count >= 255) {
-						error(peek(), "Can't have more than 255 arguments.");
-					}
-					arguments.Add(expression());
-				} while(match(TokenType.COMMA));
+			if(previous().type == TokenType.LEFT_PAREN){
+				List<expr> arguments = new List<expr>();
+				if(!check(TokenType.RIGHT_PAREN)) {
+					do {
+						if(arguments.Count >= 255) {
+							error(peek(), "Can't have more than 255 arguments.");
+						}
+						arguments.Add(expression());
+					} while(match(TokenType.COMMA));
+				}
+
+				token paren = consume(TokenType.RIGHT_PAREN,
+									  "Expect ')' after arguments.");
+
+				return new callExpr(callee, paren, arguments);
+			} else {
+				List<expr> arguments = new List<expr>();
+				if(!check(TokenType.RIGHT_BRACK)) {
+					do {
+						if(arguments.Count >= 1) {
+							error(peek(), "Only 1 expression allowed when indexing a array.");
+						}
+						arguments.Add(expression());
+					} while(match(TokenType.COMMA));
+				}
+
+				token paren = consume(TokenType.RIGHT_BRACK,
+									  "Expect ']' after expression.");
+
+				return new callExpr(callee, paren, arguments);
 			}
-
-			token paren = consume(TokenType.RIGHT_PAREN,
-								  "Expect ')' after arguments.");
-
-			return new callExpr(callee, paren, arguments);
 		}
 
 		private expr primary() {
@@ -437,6 +450,7 @@ namespace Interpreter {
 			if(match(TokenType.FALSE)) return new literalExpr(false);
 			if(match(TokenType.TRUE)) return new literalExpr(true);
 			if(match(TokenType.NIL)) return new literalExpr(null);
+			if(match(TokenType.ARRAY)) return new literalExpr(new List<object>());
 			if(match(TokenType.NUMBER, TokenType.STRING)) {
 				return new literalExpr(previous().literal);
 			}

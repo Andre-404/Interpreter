@@ -16,7 +16,7 @@ namespace Interpreter {
 			isInit = _isInit;
 		}
 
-		public object call(interpreter Interpreter, List<object> arguments) {
+		public object call(interpreter Interpreter, List<object> arguments, token Token) {
 			enviroment Enviroment = new enviroment(closure);
 			for(int i = 0; i < declaration.param.Count; i++) {
 				Enviroment.define(declaration.param[i].lexeme, arguments[i]);

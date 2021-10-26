@@ -7,6 +7,6 @@ using System.Threading.Tasks;
 namespace Interpreter {
 	interface LoxCallable {
 		public int arity();
-		public object call(interpreter Interpreter, List<object> arguments);
+		public object call(interpreter Interpreter, List<object> arguments, token Token);
 	}
 }

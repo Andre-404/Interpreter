@@ -192,6 +192,13 @@ namespace Interpreter {
 			return null;
 		}
 
+		public object visitArraySet(setArrayExpr expression) {
+			resolve(expression.arr);
+			resolve(expression.value);
+			resolve(expression.index);
+			return null;
+		}
+
 		public object visitAssign(assignmentExpr expression) {
 			resolve(expression.value);
 			resolveLocal(expression, expression.name);
