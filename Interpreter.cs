@@ -13,6 +13,7 @@ namespace Interpreter {
 		public interpreter() {
 			Enviroment = globals;
 			globals.define("clock", new clockClass());
+			globals.define("readLine", new readLineClass());
 
 		}
 
@@ -31,7 +32,23 @@ namespace Interpreter {
 			}
 
 		}
-		
+
+		private class readLineClass : LoxCallable {
+
+			public int arity() {
+				return 0;
+			}
+
+			public object call(interpreter inter, List<object> args) {
+				return (string) Console.ReadLine();
+			}
+
+			public string toString() {
+				return "<native fn>";
+			}
+
+		}
+
 		public void interpret(List<stmt> statements) {
 			//executes all the statements that have been generated
 			try {

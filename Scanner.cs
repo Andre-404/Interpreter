@@ -72,10 +72,10 @@ namespace Interpreter {
 					addToken(TokenType.DOT);
 					break;
 				case '-':
-					addToken(TokenType.MINUS);
+					addToken(match('-') ? TokenType.N_INCREMENT : match('=') ? TokenType.MINUS_EQUALS : TokenType.MINUS);
 					break;
 				case '+':
-					addToken(TokenType.PLUS);
+					addToken(match('+') ? TokenType.P_INCREMENT : match('=') ? TokenType.PLUS_EQUALS : TokenType.PLUS);
 					break;
 				case ';':
 					addToken(TokenType.SEMICOLON);

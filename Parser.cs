@@ -223,9 +223,38 @@ namespace Interpreter {
 			expr Expr = or();//if we have a assigment expression, this is the name of the variable
 
 			//if this really is a assigment expression, we consume the "=" token
-			if(match(TokenType.EQUAL)) {
+			if(match(TokenType.EQUAL) || match(TokenType.P_INCREMENT) || match(TokenType.N_INCREMENT) || match(TokenType.PLUS_EQUALS) || match(TokenType.MINUS_EQUALS)) {
 				token equals = previous();
-				expr value = assignment();//this is the expression we want to set our variable to
+				expr value;
+				/*if(equals.type == TokenType.EQUAL) value = assignment();//this is the expression we want to set our variable to
+				else {
+					if(equals.type == TokenType.P_INCREMENT) {
+						value = new binaryExpr(Expr, new token(TokenType.PLUS, "+", null, equals.line), new literalExpr((double)1));
+					} else if(equals.type == TokenType.N_INCREMENT){
+						value = new binaryExpr(Expr, new token(TokenType.MINUS, "-", null, equals.line), new literalExpr((double)1));
+					}else if(equals)
+				}*/
+
+				switch(equals.type) {
+					case TokenType.EQUAL:
+						value = assignment();
+						break;
+					case TokenType.P_INCREMENT:
+						value = new binaryExpr(Expr, new token(TokenType.PLUS, "+", null, equals.line), new literalExpr((double)1));
+						break;
+					case TokenType.N_INCREMENT:
+						value = new binaryExpr(Expr, new token(TokenType.MINUS, "-", null, equals.line), new literalExpr((double)1));
+						break;
+					case TokenType.PLUS_EQUALS:
+						value = new binaryExpr(Expr, new token(TokenType.PLUS, "+", null, equals.line), assignment());
+						break;
+					case TokenType.MINUS_EQUALS:
+						value = new binaryExpr(Expr, new token(TokenType.MINUS, "-", null, equals.line), assignment());
+						break;
+					default:
+						value = new literalExpr((double)1);
+						break;
+				}
 
 				if(Expr is varExpr) {
 					token name = ((varExpr)Expr).name;//we get the name of the variable
