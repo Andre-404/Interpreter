@@ -180,6 +180,12 @@ namespace Interpreter {
 
 			return null;
 		}
+
+		public object visitForeach(foreachStmt statement) {
+			resolve(statement.collection);
+			resolve(statement.body);
+			return null;
+		}
 		#endregion
 
 		#region Expressions
@@ -192,10 +198,12 @@ namespace Interpreter {
 			return null;
 		}
 
-		public object visitArraySet(setArrayExpr expression) {
-			resolve(expression.arr);
+		public object visitSetBracket(setExprBracket expression) {
+			resolve(expression.variable);
 			resolve(expression.value);
-			resolve(expression.index);
+			foreach(expr Expr in expression.index) {
+				resolve(Expr);
+			}
 			return null;
 		}
 

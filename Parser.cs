@@ -34,6 +34,7 @@ namespace Interpreter {
 			if(match(TokenType.WHILE)) return whileStatement();
 			if(match(TokenType.PRINT)) return printStatement();
 			if(match(TokenType.FOR)) return forStatement();
+			if(match(TokenType.FOREACH)) return foreachStatement();
 			if(match(TokenType.FUN)) return funcStatement("function");
 			if(match(TokenType.RETURN)) return returnStatement();
 			if(match(TokenType.CLASS)) return classStatement();
@@ -97,10 +98,12 @@ namespace Interpreter {
 		}
 
 		private stmt ifStatement() {
+			//we check for a parentheses, and the condition inside of them
 			consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.");
 			expr condition = expression();
 			consume(TokenType.RIGHT_PAREN, "Expect ')' after if condition.");
 
+			//we must have a single path the if can follow, the other one("else") is optional
 			stmt thenBranch = statement();
 			stmt elseBranch = null;
 			if(match(TokenType.ELSE)) {
@@ -111,6 +114,7 @@ namespace Interpreter {
 		}
 
 		private stmt whileStatement() {
+			//get the condition and the body
 			consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
 			expr condition = expression();
 			consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
@@ -122,6 +126,7 @@ namespace Interpreter {
 		private stmt forStatement() {
 			consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.");
 
+			//we first get the initializer for the variable(if any), we can either declare a variable or use a alredy existing one
 			stmt initializer;
 			if(match(TokenType.SEMICOLON)) {
 				initializer = null;
@@ -130,29 +135,31 @@ namespace Interpreter {
 			} else {
 				initializer = expressionStatement();
 			}
+			//we check if we have a condition 
 			expr condition = null;
 			if(!check(TokenType.SEMICOLON)) {
 				condition = expression();
 			}
 			consume(TokenType.SEMICOLON, "Expect ';' after loop condition.");
 
+			//we check for the increment part of the for loop
 			expr increment = null;
 			if(!check(TokenType.RIGHT_PAREN)) {
 				increment = expression();
 			}
 			consume(TokenType.RIGHT_PAREN, "Expect ')' after for clauses.");
-
+			//this executes for every iteration of the loop
 			stmt body = statement();
-
+			//we add the incrementing after body so it updates after the code is executed
 			if(increment != null) {
 				body = new blockStmt(new List<stmt>() {
 					body, new expressionStmt(increment)
 				});
 			}
-
+			//if we don't have a condition, we set the condition to "true"(this can cause a infinite loop, and shove it in a while statement
 			if(condition == null) condition = new literalExpr(true);
 			body = new whileStmt(condition, body);
-
+			//add the initializer before the while statement so it only runs once
 			if(initializer != null) {
 				body = new blockStmt(new List<stmt>(){initializer, body });
 			}
@@ -160,13 +167,49 @@ namespace Interpreter {
 			return body;
 		}
 
+		private stmt foreachStatement() {
+			token keyword = previous();
+			consume(TokenType.LEFT_PAREN, "Expect '(' after 'foreach'.");
+
+			//gets the initializer, unlike for, this statement requires a fresh variable
+			varStmt initializer;
+			if(match(TokenType.VAR)) {
+				token name = consume(TokenType.IDENTIFIER, "Expect variable name.");
+				initializer = new varStmt(name, null);
+			} else {
+				throw error(peek(), "Expect variable declaration at the beginning of a foreach statement.");
+			}
+			consume(TokenType.IN, "Expect 'in' after variable declaration.");
+			//we get the collection we want to iterate over(list, array, dictionary)
+			expr collection;
+			if(match(TokenType.IDENTIFIER)) {
+				collection = new varExpr(previous());
+			} else {
+				throw error(peek(), "Expect variable declaration at the beginning of a foreach statement.");
+			}
+
+			consume(TokenType.RIGHT_PAREN, "Expect ')' after for clauses.");
+			//this executes for every element in the collection
+			stmt body = statement();
+			body = new foreachStmt(initializer.name, collection, body, keyword);
+			//we shove the initalizer in front of the loop
+			body = new blockStmt(new List<stmt>() {
+				initializer, body
+			});
+
+			return body;
+		}
+
 		private funcStmt funcStatement(string kind) {
+			//we get the name of the function/method
 			token name = consume(TokenType.IDENTIFIER, "Expect " + kind + " name.");
 			consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.");
 
+			//next we iterate over all of the given parameters and store them in a list
 			List<token> parameters = new List<token>();
 			if(!check(TokenType.RIGHT_PAREN)) {
 				do {
+					//maximum of 255 args
 					if(parameters.Count >= 255) {
 						error(peek(), "Can't have more than 255 parameters.");
 					}
@@ -176,7 +219,7 @@ namespace Interpreter {
 				} while(match(TokenType.COMMA));
 			}
 			consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
-
+			//we build the body of the function
 			consume(TokenType.LEFT_BRACE, "Expect '{' before " + kind + " body.");
 			List<stmt> body = blockStatement();
 			return new funcStmt(name, parameters, body);
@@ -195,13 +238,14 @@ namespace Interpreter {
 
 		private stmt classStatement() {
 			token name = consume(TokenType.IDENTIFIER, "Expect class name.");
+			//for inheritance
 			varExpr superclass = null;
 			if(match(TokenType.COLON)) {
 				consume(TokenType.IDENTIFIER, "Expect superclass name.");
 				superclass = new varExpr(previous());
 			}
 			consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
-
+			//the class body is a list of methods
 			List<stmt> methods = new List<stmt>();
 			while(!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
 				methods.Add(funcStatement("method"));
@@ -243,6 +287,7 @@ namespace Interpreter {
 						value = new binaryExpr(Expr, new token(TokenType.MINUS, "-", null, equals.line), assignment());
 						break;
 					default:
+						error(equals, "Invalid assignment operator.");
 						value = new literalExpr((double)1);
 						break;
 				}
@@ -253,9 +298,9 @@ namespace Interpreter {
 				}else if(Expr is getExpr) {
 					getExpr get = (getExpr)Expr;
 					return new setExpr(get.obj, get.name, value);
-				}else if(Expr is callExpr && ((callExpr)Expr).paren.type == TokenType.RIGHT_BRACK) {
+				}else if(Expr is callExpr && ((callExpr)Expr).calleeType == CallType.INTERNAL) {
 					callExpr tempExpr = ((callExpr)Expr);
-					return new setArrayExpr(tempExpr.callee, value, tempExpr.arguments[0], tempExpr.paren);
+					return new setExprBracket(tempExpr.callee, value, tempExpr.arguments, tempExpr.paren);
 				}
 
 				error(equals, "Invalid assignment target.");//if we have a "=" but no expression following it, throw a error
@@ -301,43 +346,6 @@ namespace Interpreter {
 			}
 
 			return Expr;//if this isn't a equality, return whatever comparions() returns
-		}
-
-		private bool match(params TokenType[] tokens) {
-			//tokens are a array of tokens we wish to check against the current token
-			for(int i = 0; i < tokens.Length; i++) {
-				TokenType type = tokens[i];
-				if(check(type)) {
-					//if the current token is any of the provided tokens, then we consume it and return true
-					advance();
-					return true;
-				}
-			}
-			//if no tokens match the current token, we don't consume it and return false
-			return false;
-		}
-
-		private bool check(TokenType type) {
-			if(isAtEnd()) return false;
-			return peek().type == type;//takes a look at the token we have yet to consume and compares it's type to the provided type
-		}
-
-		private token advance() {
-			//if we're not at EOF, update our position in the token list
-			if(!isAtEnd()) current++;
-			return previous();
-		}
-
-		private bool isAtEnd() {
-			return peek().type == TokenType.EOF;
-		}
-
-		private token peek() {
-			return tokens[current];//returns the token we have yet to consume
-		}
-
-		private token previous() {
-			return tokens[current - 1];//return the most recently consumed token
 		}
 
 		private expr comparison() {
@@ -393,15 +401,15 @@ namespace Interpreter {
 		private expr call() {
 			expr Expr = primary();//maximum precedence
 
+			//we look for either '(' or '[' after the expression to see if it's a call
 			while(true) {
-				if(match(TokenType.LEFT_PAREN)) {
+				if(match(TokenType.LEFT_PAREN) || match(TokenType.LEFT_BRACK)) {
 					Expr = finishCall(Expr);
 				} else if(match(TokenType.DOT)) {
+					//if we matched a '.' that means we're try to access a class property, so we create a new expression for that
 					token name = consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
 					Expr = new getExpr(Expr, name);
-				} else if(previous().type == TokenType.IDENTIFIER && match(TokenType.LEFT_BRACK)){
-					Expr = finishCall(Expr);
-				} else {
+				}  else {
 					break;
 				}
 			}
@@ -412,6 +420,7 @@ namespace Interpreter {
 
 		private expr finishCall(expr callee) {
 			if(previous().type == TokenType.LEFT_PAREN){
+				//if we have a call to a function we get all the arg
 				List<expr> arguments = new List<expr>();
 				if(!check(TokenType.RIGHT_PAREN)) {
 					do {
@@ -427,20 +436,19 @@ namespace Interpreter {
 
 				return new callExpr(callee, paren, arguments);
 			} else {
+				//if we have a call to access one of the internal type instances(list, array, dictionary)
 				List<expr> arguments = new List<expr>();
 				if(!check(TokenType.RIGHT_BRACK)) {
 					do {
-						if(arguments.Count >= 1) {
-							error(peek(), "Only 1 expression allowed when indexing a array.");
-						}
 						arguments.Add(expression());
 					} while(match(TokenType.COMMA));
 				}
 
 				token paren = consume(TokenType.RIGHT_BRACK,
 									  "Expect ']' after expression.");
-
-				return new callExpr(callee, paren, arguments);
+				callExpr temp = new callExpr(callee, paren, arguments);
+				temp.calleeType = CallType.INTERNAL;//chuck this in to differentiate between the call types
+				return temp;
 			}
 		}
 
@@ -450,7 +458,6 @@ namespace Interpreter {
 			if(match(TokenType.FALSE)) return new literalExpr(false);
 			if(match(TokenType.TRUE)) return new literalExpr(true);
 			if(match(TokenType.NIL)) return new literalExpr(null);
-			if(match(TokenType.ARRAY)) return new literalExpr(new List<object>());
 			if(match(TokenType.NUMBER, TokenType.STRING)) {
 				return new literalExpr(previous().literal);
 			}
@@ -476,19 +483,10 @@ namespace Interpreter {
 			throw error(peek(), "Expected expression.");
 		}
 
-		private token consume(TokenType type, string msg) {
-			//if the token ahead is of the type we need, consume it
-			if(check(type)) return advance();
+		
+		#endregion
 
-			//otherwise, throw a error
-			throw error(peek(), msg);
-		}
-
-		private parseError error(token t, string msg) {
-			Lox.error(t, msg);//this makes sure we don't execute faulty code
-			return new parseError();
-		}
-
+		#region Helpers
 		private void synchronize() {
 			advance();//consume the erroneous token
 
@@ -511,6 +509,58 @@ namespace Interpreter {
 
 				advance();
 			}
+		}
+		private parseError error(token t, string msg) {
+			Lox.error(t, msg);//this makes sure we don't execute faulty code
+			return new parseError();
+		}
+
+		private token consume(TokenType type, string msg) {
+			//if the token ahead is of the type we need, consume it
+			if(check(type))
+				return advance();
+
+			//otherwise, throw a error
+			throw error(peek(), msg);
+		}
+
+		private bool match(params TokenType[] tokens) {
+			//tokens are a array of tokens we wish to check against the current token
+			for(int i = 0; i < tokens.Length; i++) {
+				TokenType type = tokens[i];
+				if(check(type)) {
+					//if the current token is any of the provided tokens, then we consume it and return true
+					advance();
+					return true;
+				}
+			}
+			//if no tokens match the current token, we don't consume it and return false
+			return false;
+		}
+
+		private bool check(TokenType type) {
+			if(isAtEnd())
+				return false;
+			return peek().type == type;//takes a look at the token we have yet to consume and compares it's type to the provided type
+		}
+
+		private token advance() {
+			//if we're not at EOF, update our position in the token list
+			if(!isAtEnd())
+				current++;
+			return previous();
+		}
+
+		private bool isAtEnd() {
+			return peek().type == TokenType.EOF;
+		}
+
+		private token peek() {
+			return tokens[current];//returns the token we have yet to consume
+		}
+
+		private token previous() {
+			return tokens[current - 1];//return the most recently consumed token
 		}
 
 		#endregion

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Interpreter {
 	class loxClass : LoxCallable {
 		public string name;
-		private Dictionary<string, loxFunction> methods;
+		public Dictionary<string, loxFunction> methods;
 		public loxClass superClass;
 
 		public loxClass(string _name, loxClass _superClass, Dictionary<string, loxFunction> _methods) {
@@ -46,7 +46,7 @@ namespace Interpreter {
 				loxFunction func;
 				if(methods.TryGetValue(name, out func)) return func;
 			}
-
+			//if we didn't find the method in the class, check the superclass(if we have one)
 			if(superClass != null) {
 				return superClass.findMethod(name);
 			}

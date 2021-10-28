@@ -20,7 +20,7 @@ namespace Interpreter {
 			public T visitCall(callExpr expression);
 			public T visitGet(getExpr expression);
 			public T visitSet(setExpr expression);
-			public T visitArraySet(setArrayExpr expression);
+			public T visitSetBracket(setExprBracket expression);
 			public T visitThis(thisExpr expression);
 			public T visitSuper(superExpr expression);
 
@@ -41,7 +41,6 @@ namespace Interpreter {
 			return vis.visitBinary(this);
 		}
 	}
-
 	class groupingExpr : expr {
 		public expr expression;
 		public groupingExpr(expr _expression) {
@@ -52,7 +51,6 @@ namespace Interpreter {
 			return vis.visitGrouping(this);
 		}
 	}
-
 	class literalExpr : expr {
 		public object value;//can be either bool, null, number or string
 		public literalExpr(object _value) {
@@ -63,7 +61,6 @@ namespace Interpreter {
 			return vis.visitLiteral(this);
 		}
 	}
-
 	class unaryExpr : expr {
 		public token op;
 		public expr right;
@@ -76,7 +73,6 @@ namespace Interpreter {
 			return vis.visitUnary(this);
 		}
 	}
-
 	class varExpr : expr {
 		public token name;
 
@@ -87,7 +83,6 @@ namespace Interpreter {
 			return vis.visitVar(this);
 		}
 	}
-
 	class assignmentExpr : expr {
 		public token name;
 		public expr value;
@@ -100,7 +95,6 @@ namespace Interpreter {
 			return vis.visitAssign(this);
 		}
 	}
-
 	class logicalExpr : expr {
 		public expr left;
 		public token op;
@@ -116,11 +110,11 @@ namespace Interpreter {
 			return vis.visitLogical(this);
 		}
 	}
-
 	class callExpr : expr {
 		public expr callee;
 		public token paren;
 		public List<expr> arguments;
+		public CallType calleeType = CallType.DEFAULT;
 
 		public callExpr(expr _callee, token _paren, List<expr> _args) {
 			callee = _callee;
@@ -132,7 +126,6 @@ namespace Interpreter {
 			return vis.visitCall(this);
 		}
 	}
-
 	class getExpr : expr {
 		public expr obj;
 		public token name;
@@ -182,20 +175,20 @@ namespace Interpreter {
 			return vis.visitSuper(this);
 		}
 	}
-	class setArrayExpr : expr {
-		public expr arr;
-		public expr index;
+	class setExprBracket : expr {
+		public expr variable;
+		public List<expr> index;
 		public expr value;
 		public token pos;
 
-		public setArrayExpr(expr _arr, expr _val, expr _index, token _pos) {
-			arr = _arr;
+		public setExprBracket(expr _variable, expr _val, List<expr> _index, token _pos) {
+			variable = _variable;
 			value = _val;
 			index = _index;
 			pos = _pos;
 		}
 		public override T accept<T>(visitor<T> vis) {
-			return vis.visitArraySet(this);
+			return vis.visitSetBracket(this);
 		}
 	}
 
@@ -257,7 +250,7 @@ namespace Interpreter {
 			return "Called the superclass's method: " + expression.method.lexeme;
 		}
 
-		public string visitArraySet(setArrayExpr expression) {
+		public string visitSetBracket(setExprBracket expression) {
 			return "Setting array value";
 		}
 

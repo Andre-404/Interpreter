@@ -17,11 +17,12 @@ namespace Interpreter {
 		N_INCREMENT, PLUS_EQUALS, MINUS_EQUALS,
 
 		// Literals.
-		IDENTIFIER, STRING, NUMBER, ARRAY,
+		IDENTIFIER, STRING, NUMBER,
 
 		// Keywords.
 		AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL, OR,
 		PRINT, RETURN, SUPER, THIS, TRUE, VAR, WHILE,
+		FOREACH, IN,
 
 		EOF
 	}
@@ -38,10 +39,23 @@ namespace Interpreter {
 		SUBCLASS
 	}
 
+	enum InstanceType {
+		CUSTOM,
+		ARRAY,
+		LIST,
+		DICTIONARY
+	}
+
+	enum CallType {
+		DEFAULT,
+		INTERNAL
+	}
+
 	class Lox{
 		private static bool hadError = false;
 		private static bool hadRuntimeError = false;
 		private static interpreter Interpreter = new interpreter();
+		private static string source;
 
 		public static void error(int line, string msg) {
 			report(line, "", msg);
@@ -55,7 +69,7 @@ namespace Interpreter {
 			}
 		}
 		public static void runtimeError(RuntimeError error) {
-			Console.WriteLine(error.Message + "\n[line " + error.Token.line + "]");
+			Console.WriteLine("Error: " + error.Message + "\n[line " + error.Token.line + "]\n" + printLine(error.Token));
 			hadRuntimeError = true;
 		}
 
@@ -63,8 +77,29 @@ namespace Interpreter {
 			Console.WriteLine("[line " + line.ToString() + "] Error" + where + ": " + msg);
 			hadError = true;//ensures we don't run code that doesn't work
 		}
-		public static void run(string source) {
+
+		private static string printLine(token t) {
+			//prints error line
+			int line = t.line;
+			string s = "";
+			int tempL = 1;
+			for(int i = 0; i < source.Length; i++) {
+				char c = source[i];
+				if(c == '\n'){
+					tempL++;
+					continue;
+				}
+				if(tempL == line) {
+					s += c;
+				}
+				
+			}
+			return s;
+		}
+
+		public static void run(string _source) {
 			//get the tokens from the source code
+			source = _source;
 			scanner sc = new scanner(source);
 			List<token> tokens = sc.scanTokens();
 			for(int i = 0; i < tokens.Count; i++) {

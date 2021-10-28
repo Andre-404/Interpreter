@@ -15,8 +15,9 @@ namespace Interpreter {
 			Enviroment = globals;
 			globals.define("systemClock", new clockClass());
 			globals.define("systemReadLine", new readLineClass());
-			globals.define("length", new getArrayLength());
 			globals.define("systemReadFile", new readFileClass());
+			globals.define("List", new loxListClass("List", null, new Dictionary<string, loxFunction>(), convertNativeFunc));
+			globals.define("Array", new loxArrayClass("Array", null, new Dictionary<string, loxFunction>(), convertNativeFunc));
 		}
 
 		private class clockClass : LoxCallable{
@@ -69,24 +70,6 @@ namespace Interpreter {
 
 		}
 
-		private class getArrayLength : LoxCallable {
-
-			public int arity() {
-				return 1;
-			}
-
-			public object call(interpreter inter, List<object> args, token Token) {
-				if(!(args[0] is List<object>))
-					throw new RuntimeError(Token, "This function accepts only arrays");
-				return ((List<object>)args[0]).Count;
-			}
-
-			public string toString() {
-				return "<native fn>";
-			}
-
-		}
-
 		public void interpret(List<stmt> statements) {
 			//executes all the statements that have been generated
 			try {
@@ -97,6 +80,9 @@ namespace Interpreter {
 				Lox.runtimeError(error);
 			}
 		}
+		private loxFunction convertNativeFunc(object func) {
+			return new loxFunction(null, Enviroment, false, (nativeFunc)func);
+		}
 
 		public void resolve(expr expression, int depth) {
 			//adds a local variable so that we know that in the provided "expression", the variable definition is depth hops away
@@ -104,6 +90,7 @@ namespace Interpreter {
 				locals[expression] = depth;
 			}
 		}
+
 		#region Expressions
 		public object visitLiteral(literalExpr expression) {
 			return expression.value;//returns the literal value of the expression
@@ -291,35 +278,38 @@ namespace Interpreter {
 			foreach(expr argument in expression.arguments) {
 				arguments.Add(evaluate(argument));
 			}
+
 			if(expression.paren.type == TokenType.RIGHT_PAREN){
 				//if we have a function or a method, we first check if it's a child of lox callable
 				if(!typeof(LoxCallable).IsInstanceOfType(callee)) {
 					throw new RuntimeError(expression.paren, "Can only call functions and classes.");
 				}
-				//next we check if the arg count is the same as func arity
 				LoxCallable function = (LoxCallable)callee;
+				//next we check if the arg count is the same as func arity
 				if(arguments.Count != function.arity()) {
 					throw new RuntimeError(expression.paren, "Expected " +
 						function.arity() + " arguments but got " +
 						arguments.Count + ".");
 				}
+
 				//after all the checks we invoke the call method of the function
 				return function.call(this, arguments, expression.paren);
 			} else {
-				//we do a couple of checks to make sure that we are accessing the array correct
-				if(!(callee is List<object>)) {
-					throw new RuntimeError(expression.paren, "Can only access arrays.");
+				//check if we got a internal type instance
+				if(!(callee is loxInstance) || ((loxInstance)callee).type == InstanceType.CUSTOM) {
+					throw new RuntimeError(expression.paren,
+										   "Can only access type objects.");
 				}
-				if(arguments.Count != 1 || arguments.Count <= 0){
-					throw new RuntimeError(expression.paren, "Must have a expression inside the brackets.");
+				loxInstance inst = (loxInstance)callee;
+
+				//get the arguments(if any are needed)
+				List<object> args = new List<object>();
+				foreach(expr argument in expression.arguments) {
+					args.Add(evaluate(argument));
 				}
-				if(!(arguments[0] is double)) {
-					throw new RuntimeError(expression.paren, "Must be a number.");
-				}
-				//since we know that this function only wants to RETRIEVE the array values, we return the array value 
-				List<object> tempL = (List<object>)callee;
-				return tempL[Convert.ToInt32(arguments[0])];
-				
+				loxFunction func = (loxFunction)inst.get(new token(TokenType.IDENTIFIER, "get", null, expression.paren.line));
+				return func.call(this, args, expression.paren);
+
 			}
 		}
 
@@ -348,25 +338,30 @@ namespace Interpreter {
 			return value;
 		}
 
-		public object visitArraySet(setArrayExpr expression) {
-			object obj = evaluate(expression.arr);//evaluate to get the array id
+		public object visitSetBracket(setExprBracket expression) {
+			object obj = evaluate(expression.variable);//evaluate to get the internal type instance
 
-			//check if we really got a array
-			if(!(obj is List<object>)) {
+			//check if we really got instance
+			if(!(obj is loxInstance) || ((loxInstance)obj).type == InstanceType.CUSTOM) {
 				throw new RuntimeError(expression.pos,
-									   "Can only access arrays.");
+									   "Can only access type objects.");
 			}
-			object index = evaluate(expression.index);//evaluate the index
-			//check if the index really is a number
-			if(index is double || index is int){
-				object value = evaluate(expression.value);//evaluate the value that we will store in the array
-				List<object> tempL = ((List<object>)obj);
-				if(!(tempL.Count > Convert.ToInt32(index) - 1)) throw new RuntimeError(expression.pos, "Index out of reach.");
-				tempL.Insert(Convert.ToInt32(index), value);
-				return value;
-			} else {
-				throw new RuntimeError(expression.pos, "Index can be only number.");
+			loxInstance inst = (loxInstance)obj;
+
+			//pack all the arguments,and put the value as the first argument
+			List<object> args = new List<object>();
+			args.Add(evaluate(expression.value));
+			foreach(expr argument in expression.index) {
+				args.Add(evaluate(argument));
 			}
+			//look for the "set" method in the instance and check it's arity
+			loxFunction func = (loxFunction)inst.get(new token(TokenType.IDENTIFIER, "set", null, expression.pos.line));
+			if(args.Count != func.arity()) {
+				throw new RuntimeError(expression.pos, "Expected " +
+					(func.arity() - 1) + " indexes inside brackets but got: " +
+					(args.Count-1) + ".");
+			}
+			return func.call(this, args, expression.pos);
 		}
 
 		public object visitThis(thisExpr expression) {
@@ -461,7 +456,7 @@ namespace Interpreter {
 
 		public object visitFunc(funcStmt statement) {
 			//we make a new function object with the current environment as it's closure
-			loxFunction function = new loxFunction(statement, Enviroment, false);
+			loxFunction function = new loxFunction(statement, Enviroment, false, null);
 			Enviroment.define(statement.name.lexeme, function);//define the function in the current environment for later use
 			return null;
 		}
@@ -494,7 +489,7 @@ namespace Interpreter {
 			Dictionary<string, loxFunction> methods = new Dictionary<string, loxFunction>();
 			foreach(funcStmt method in statement.methods) {
 				//this makes sure we brand the "init" function as the constructor
-				loxFunction function = new loxFunction(method, Enviroment, method.name.lexeme.Equals("init"));
+				loxFunction function = new loxFunction(method, Enviroment, method.name.lexeme.Equals("init"), null);
 				if(!methods.TryAdd(method.name.lexeme, function)) {
 					methods[method.name.lexeme] = function;
 				}
@@ -508,6 +503,47 @@ namespace Interpreter {
 			//assign the class to the current environment
 			Enviroment.assign(statement.name, klass);
 			return null;
+		}
+
+		public object visitForeach(foreachStmt statement) {
+			//we evaluate the variable holding the collection we want to iterate over
+			object collection = evaluate(statement.collection);
+			if(!(collection is loxInstance)) {
+				throw new RuntimeError(statement.keyword, "'foreach' Can only iterate over collections.");
+			}
+			loxInstance inst = (loxInstance)collection;
+			//for every type of collection, we need to iterate differently
+			switch(inst.type) {
+				case InstanceType.LIST:
+					foreachList(inst, statement);
+					break;
+				case InstanceType.ARRAY:
+					break;
+				case InstanceType.DICTIONARY:
+					break;
+				default:
+					throw new RuntimeError(statement.keyword, "'foreach' Can only iterate over collections.");
+					break;
+			}
+
+			return null;
+		}
+
+		#endregion
+
+		#region Helpers
+
+		private void foreachList(loxInstance inst, foreachStmt statement) {
+			object tempL;
+			//since ___loxInternalList is a property that people can change, we need to make sure it's still there
+			if(!inst.fields.TryGetValue("___loxInternalList", out tempL)) {
+				throw new RuntimeError(statement.keyword, "Does not contain a list.");
+			}
+			List<object> internalList = (List<object>)tempL;
+			foreach(object o in internalList) {
+				Enviroment.define(statement.declaration.lexeme, o);
+				execute(statement.body);
+			}
 		}
 
 		#endregion

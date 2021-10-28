@@ -33,6 +33,8 @@ namespace Interpreter {
 			keywords.Add("true", TokenType.TRUE);
 			keywords.Add("var", TokenType.VAR);
 			keywords.Add("while", TokenType.WHILE);
+			keywords.Add("foreach", TokenType.FOREACH);
+			keywords.Add("in", TokenType.IN);
 		}
 
 		public List<token> scanTokens() {
@@ -90,7 +92,7 @@ namespace Interpreter {
 					addToken(match('=') ? TokenType.BANG_EQUAL : TokenType.BANG);
 					break;
 				case '[':
-					addToken(match(']') ? TokenType.ARRAY : TokenType.LEFT_BRACK);
+					addToken(TokenType.LEFT_BRACK);
 					break;
 				case ']':
 					addToken(TokenType.RIGHT_BRACK);

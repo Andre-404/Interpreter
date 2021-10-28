@@ -18,6 +18,7 @@ namespace Interpreter {
 			public T visitFunc(funcStmt statement);
 			public T visitReturn(returnStmt statement);
 			public T visitClass(classStmt statement);
+			public T visitForeach(foreachStmt statement);
 		}
 	}
 
@@ -150,6 +151,24 @@ namespace Interpreter {
 
 		public override T accept<T>(visitor<T> vis) {
 			return vis.visitClass(this);
+		}
+	}
+
+	class foreachStmt : stmt {
+		public token declaration;
+		public expr collection;
+		public stmt body;
+		public token keyword;
+
+		public foreachStmt(token _decl, expr _collection, stmt _body, token _keyword) {
+			declaration = _decl;
+			collection = _collection;
+			body = _body;
+			keyword = _keyword;
+		}
+
+		public override T accept<T>(visitor<T> vis) {
+			return vis.visitForeach(this);
 		}
 	}
 }
