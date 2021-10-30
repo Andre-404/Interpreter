@@ -54,4 +54,31 @@ namespace Interpreter {
 			return instance;
 		}
 	}
+
+	class loxHashClass : loxClass, LoxCallable {
+
+		public loxHashClass(string _name, loxClass _superClass, Dictionary<string, loxFunction> _methods, Func<LoxCallable, loxFunction> func) : base(_name, _superClass, _methods) {
+			methods = new Dictionary<string, loxFunction>();
+			methods.Add("set", func(new loxHashSet()));
+			methods.Add("length", func(new loxHashLength()));
+			methods.Add("get", func(new loxHashGet()));
+		}
+
+		public new int arity() {
+			return 1;
+		}
+
+		public new object call(interpreter inter, List<object> arguments, token Token) {
+			//this calls the constructor(if any) and creates a new instance of the class
+			if(inter.isType(arguments[0], Token)){
+				loxInstance instance = new loxInstance(this);
+				instance.fields.Add("___loxInternalHash", new Dictionary<object, object>());
+				instance.fields.Add("___loxInternalKeyType", inter.getType(arguments[0], Token).name);
+
+				instance.type = InstanceType.DICTIONARY;
+				return instance;
+			}
+			throw new RuntimeError(Token, "Couldn't create hash.");
+		}
+	}
 }

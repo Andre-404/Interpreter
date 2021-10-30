@@ -16,58 +16,12 @@ namespace Interpreter {
 			globals.define("systemClock", new clockClass());
 			globals.define("systemReadLine", new readLineClass());
 			globals.define("systemReadFile", new readFileClass());
+			globals.define("getType", new getType());
+
+			//type classes
 			globals.define("List", new loxListClass("List", null, new Dictionary<string, loxFunction>(), convertNativeFunc));
 			globals.define("Array", new loxArrayClass("Array", null, new Dictionary<string, loxFunction>(), convertNativeFunc));
-		}
-
-		private class clockClass : LoxCallable{
-			
-			public int arity() {
-				return 0;
-			}
-
-			public object call(interpreter inter, List<object> args, token T) {
-				return (double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-			}
-
-			public string toString() {
-				return "<native fn>";
-			}
-
-		}
-
-		private class readLineClass : LoxCallable {
-
-			public int arity() {
-				return 0;
-			}
-
-			public object call(interpreter inter, List<object> args, token T) {
-				return (string) Console.ReadLine();
-			}
-
-			public string toString() {
-				return "<native fn>";
-			}
-
-		}
-
-		private class readFileClass : LoxCallable {
-
-			public int arity() {
-				return 1;
-			}
-
-			public object call(interpreter inter, List<object> args, token T) {
-				if(!(args[0] is string)) throw new RuntimeError(T, "File path must be string");
-				string s = File.ReadAllText((string)args[0]);
-				return s;
-			}
-
-			public string toString() {
-				return "<native fn>";
-			}
-
+			globals.define("Hash", new loxHashClass("Hash", null, new Dictionary<string, loxFunction>(), convertNativeFunc));
 		}
 
 		public void interpret(List<stmt> statements) {
@@ -163,7 +117,6 @@ namespace Interpreter {
 						return (string)left + (string)right;
 					}
 					throw new RuntimeError(expression.op, "Operands must be two numbers or two strings.");
-					break;
 
 				case TokenType.SLASH:
 					checkNumberOperands(expression.op, left, right);
@@ -189,7 +142,9 @@ namespace Interpreter {
 				return true;
 			if(a == null)
 				return false;
-
+			if(a is loxType && b is loxType) {
+				return ((loxType)a).name.Equals(((loxType)b).name);
+			}
 			return a.Equals(b);
 		}
 
@@ -334,6 +289,9 @@ namespace Interpreter {
 			}
 			//evaluate the expression of the value and then set it for the specified instance in the expression
 			object value = evaluate(expression.value);
+			if(expression.name.lexeme.Contains("___loxInternal")) {
+				throw new RuntimeError(expression.name, "Cannot override internal fields.");
+			}
 			((loxInstance)obj).set(expression.name, value);
 			return value;
 		}
@@ -350,10 +308,10 @@ namespace Interpreter {
 
 			//pack all the arguments,and put the value as the first argument
 			List<object> args = new List<object>();
-			args.Add(evaluate(expression.value));
 			foreach(expr argument in expression.index) {
 				args.Add(evaluate(argument));
 			}
+			args.Add(evaluate(expression.value));
 			//look for the "set" method in the instance and check it's arity
 			loxFunction func = (loxFunction)inst.get(new token(TokenType.IDENTIFIER, "set", null, expression.pos.line));
 			if(args.Count != func.arity()) {
@@ -518,12 +476,12 @@ namespace Interpreter {
 					foreachList(inst, statement);
 					break;
 				case InstanceType.ARRAY:
+					foreachArray(inst, statement);
 					break;
 				case InstanceType.DICTIONARY:
 					break;
 				default:
 					throw new RuntimeError(statement.keyword, "'foreach' Can only iterate over collections.");
-					break;
 			}
 
 			return null;
@@ -544,6 +502,62 @@ namespace Interpreter {
 				Enviroment.define(statement.declaration.lexeme, o);
 				execute(statement.body);
 			}
+		}
+
+		private void foreachArray(loxInstance inst, foreachStmt statement) {
+			object tempArr;
+			//since ___loxInternalList is a property that people can change, we need to make sure it's still there
+			if(!inst.fields.TryGetValue("___loxInternalArray", out tempArr)) {
+				throw new RuntimeError(statement.keyword, "Does not contain a array.");
+			}
+			object[] internalArray = (object[])tempArr;
+			foreach(object o in internalArray) {
+				Enviroment.define(statement.declaration.lexeme, o);
+				execute(statement.body);
+			}
+		}
+
+		public bool isType(object name, token T) {
+			switch(name) {
+				case loxFunction:
+					return true;
+				case loxInstance:
+					return true;
+				case loxClass:
+					return true;
+				case null:
+					return true;
+				case loxType:
+					return true;
+			}
+
+			throw new RuntimeError(T, "Type not supported.");
+		}
+
+		public loxType getType(object arg, token T) {
+			object obj = arg;
+			string s = "";
+			if(obj is double) {
+				s =  "number";
+			} else if(obj is string) {
+				s = "string";
+			} else if(obj is null) {
+				s = "nil";
+			} else if(obj is LoxCallable) {
+				if(obj is loxClass) {
+					s = ((loxClass)obj).name;
+				} else {
+					s = "function";
+				}
+			}else if(obj is loxInstance) {
+				s = ((loxInstance)obj).klass.name;
+			}else if(obj is loxType){
+				s = ((loxType)obj).name;
+			}
+			if(s.Length != 0) {
+				return new loxType(s);
+			}
+			throw new RuntimeError(T, "Type " + obj.ToString()+ " not defined");
 		}
 
 		#endregion

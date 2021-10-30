@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Interpreter {
 	class loxInstance {
-		private loxClass klass;
+		public loxClass klass;
 		public Dictionary<string, object> fields = new Dictionary<string, object>();
 		public InstanceType type = InstanceType.CUSTOM;//to differentiate between custom and built-in instances
 

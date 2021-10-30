@@ -462,7 +462,20 @@ namespace Interpreter {
 				return new literalExpr(previous().literal);
 			}
 			//if this is a identifier, we know that this is a variable name, so we return a expression containing the name of the variable
-			if(match(TokenType.IDENTIFIER)) return new varExpr(previous());
+			if(match(TokenType.IDENTIFIER)) {
+				switch(previous().lexeme) {
+					case "number":
+						return new literalExpr(new loxType("number"));
+					case "string":
+						return new literalExpr(new loxType("string"));
+					case "bool":
+						return new literalExpr(new loxType("bool"));
+					case "nil":
+						return new literalExpr(new loxType("nil"));
+					default:
+						return new varExpr(previous());
+				}
+			}
 			if(match(TokenType.THIS)) return new thisExpr(previous());
 
 			if(match(TokenType.SUPER)) {
