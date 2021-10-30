@@ -80,7 +80,6 @@ namespace Interpreter {
 	}
 
 	class loxListSet : nativeFunc {
-		private int realArgCount = 1;
 		public override int arity() {
 			return 2;
 		}

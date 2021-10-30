@@ -5,7 +5,6 @@ C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\bin\Debug\net5.0\Interpret
 C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\bin\Debug\net5.0\Interpreter.dll
 C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\bin\Debug\net5.0\ref\Interpreter.dll
 C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\bin\Debug\net5.0\Interpreter.pdb
-C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\obj\Debug\net5.0\Interpreter.csproj.AssemblyReference.cache
 C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\obj\Debug\net5.0\Interpreter.GeneratedMSBuildEditorConfig.editorconfig
 C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\obj\Debug\net5.0\Interpreter.AssemblyInfoInputs.cache
 C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\obj\Debug\net5.0\Interpreter.AssemblyInfo.cs

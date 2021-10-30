@@ -69,7 +69,11 @@ namespace Interpreter {
 			}
 		}
 		public static void runtimeError(RuntimeError error) {
-			Console.WriteLine("Error: " + error.Message + "\n[line " + error.Token.line + "]\n" + printLine(error.Token));
+			Console.WriteLine("--------------\n" + 
+				"Error: " + error.Message + 
+				"\n[line " + error.Token.line + "]\n" + 
+				printLine(error.Token) +
+				"\n--------------");
 			hadRuntimeError = true;
 		}
 
@@ -102,10 +106,6 @@ namespace Interpreter {
 			source = _source;
 			scanner sc = new scanner(source);
 			List<token> tokens = sc.scanTokens();
-			for(int i = 0; i < tokens.Count; i++) {
-				Console.WriteLine(tokens[i].toString());
-			}
-			Console.WriteLine("---------------");
 			//parse the tokens into statements
 			parser p = new parser(tokens);
 			List<stmt> statements = p.parse();
@@ -131,10 +131,11 @@ namespace Interpreter {
 		}
 		
 		static void Main(string[] args) {
-			Console.WriteLine("File path: "+ "C:\\Temp\\test.txt");
+			Console.WriteLine("File path: ");
 			Lox interpreter = new Lox();
-			//string fp = Console.ReadLine();
-			string sourceCode = readFromFile(@"C:\Temp\test.txt");
+			string fp = Console.ReadLine();
+			Console.WriteLine("\nOutput:");
+			string sourceCode = readFromFile(fp);
 			Lox.run(sourceCode);
 			Console.ReadKey();
 			

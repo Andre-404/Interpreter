@@ -22,7 +22,7 @@ namespace Interpreter {
 			keywords.Add("else", TokenType.ELSE);
 			keywords.Add("false", TokenType.FALSE);
 			keywords.Add("for", TokenType.FOR);
-			keywords.Add("fun", TokenType.FUN);
+			keywords.Add("func", TokenType.FUN);
 			keywords.Add("if", TokenType.IF);
 			keywords.Add("nil", TokenType.NIL);
 			keywords.Add("or", TokenType.OR);
