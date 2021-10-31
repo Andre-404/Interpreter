@@ -29,3 +29,4 @@ C:\ProjektiAndrea\Interpreter\Interpreter\obj\Debug\net5.0\Interpreter.dll
 C:\ProjektiAndrea\Interpreter\Interpreter\obj\Debug\net5.0\ref\Interpreter.dll
 C:\ProjektiAndrea\Interpreter\Interpreter\obj\Debug\net5.0\Interpreter.pdb
 C:\ProjektiAndrea\Interpreter\Interpreter\obj\Debug\net5.0\Interpreter.genruntimeconfig.cache
+C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\obj\Debug\net5.0\Interpreter.csproj.AssemblyReference.cache

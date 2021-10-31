@@ -26,11 +26,11 @@ namespace Interpreter {
 			object tempArr;
 			loxInstance inst = (loxInstance)obj;
 			tempArr = inst.fields["___loxInternalList"];
-			if(!(tempArr is List<object>)) throw new RuntimeError(Token, "Field 'array' is not a array.");
+			if(!(tempArr is List<object>)) throw new RuntimeError(Token, "Field '___loxInternalList' is not a list.");
 			return ((List<object>)tempArr).Count;
 		}
 
-		public string toString() {
+		public override string ToString() {
 			return "<native fn>";
 		}
 
@@ -46,12 +46,12 @@ namespace Interpreter {
 			loxInstance inst = (loxInstance)obj;
 			tempArr = inst.fields["___loxInternalList"];
 			if(!(tempArr is List<object>))
-				throw new RuntimeError(Token, "Field 'array' is not a array.");
+				throw new RuntimeError(Token, "Field '___loxInternalList' is not a list.");
 			((List<object>)tempArr).Add(args[0]);
 			return null;
 		}
 
-		public string toString() {
+		public override string ToString() {
 			return "<native fn>";
 		}
 
@@ -68,12 +68,12 @@ namespace Interpreter {
 			loxInstance inst  = (loxInstance)obj;
 			tempArr = inst.fields["___loxInternalList"];
 			if(!(tempArr is List<object>))
-				throw new RuntimeError(Token, "Field 'array' is not a array.");
+				throw new RuntimeError(Token, "Field '___loxInternalList' is not a list.");
 			((List<object>)tempArr).RemoveAt(Convert.ToInt32(args[0]));
 			return null;
 		}
 
-		public string toString() {
+		public override string ToString() {
 			return "<native fn>";
 		}
 
@@ -94,7 +94,7 @@ namespace Interpreter {
 			loxInstance inst = (loxInstance)obj;
 			tempArr = inst.fields["___loxInternalList"];
 			if(!(tempArr is List<object>))
-				throw new RuntimeError(Token, "Field 'array' is not a array.");
+				throw new RuntimeError(Token, "Field '___loxInternalList' is not a list.");
 			if(index >= ((List<object>)tempArr).Count) {
 				throw new RuntimeError(Token, "Index " + index.ToString() + " outside of range: " + ((List<object>)tempArr).Count.ToString());
 			}
@@ -102,7 +102,7 @@ namespace Interpreter {
 			return null;
 		}
 
-		public string toString() {
+		public override string ToString() {
 			return "<native fn>";
 		}
 
@@ -123,14 +123,14 @@ namespace Interpreter {
 			loxInstance inst = (loxInstance)obj;
 			tempArr = inst.fields["___loxInternalList"];
 			if(!(tempArr is List<object>))
-				throw new RuntimeError(Token, "Field 'array' is not a array.");
+				throw new RuntimeError(Token, "Field '___loxInternalList' is not a list.");
 			if(index >= ((List<object>)tempArr).Count) {
 				throw new RuntimeError(Token, "Index " + index.ToString() + " outside of range: " + ((List<object>)tempArr).Count.ToString());
 			}
 			return ((List<object>)tempArr)[index];
 		}
 
-		public string toString() {
+		public override string ToString() {
 			return "<native fn>";
 		}
 
@@ -154,7 +154,7 @@ namespace Interpreter {
 			return ((object[])tempArr).Length; 
 		}
 
-		public string toString() {
+		public override string ToString() {
 			return "<native fn>";
 		}
 
@@ -183,7 +183,7 @@ namespace Interpreter {
 			return null;
 		}
 
-		public string toString() {
+		public override string ToString() {
 			return "<native fn>";
 		}
 
@@ -211,7 +211,7 @@ namespace Interpreter {
 			return ((object[])tempArr)[index];
 		}
 
-		public string toString() {
+		public override string ToString() {
 			return "<native fn>";
 		}
 
@@ -235,7 +235,7 @@ namespace Interpreter {
 			return ((Dictionary<object, object>)tempArr).Count;
 		}
 
-		public string toString() {
+		public override string ToString() {
 			return "<native fn>";
 		}
 
@@ -266,7 +266,7 @@ namespace Interpreter {
 			return null;
 		}
 
-		public string toString() {
+		public override string ToString() {
 			return "<native fn>";
 		}
 
@@ -298,7 +298,7 @@ namespace Interpreter {
 			return val;
 		}
 
-		public string toString() {
+		public override string ToString() {
 			return "<native fn>";
 		}
 
@@ -317,7 +317,7 @@ namespace Interpreter {
 			return (double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 		}
 
-		public string toString() {
+		public override string ToString() {
 			return "<native fn>";
 		}
 
@@ -333,7 +333,7 @@ namespace Interpreter {
 			return (string)Console.ReadLine();
 		}
 
-		public string toString() {
+		public override string ToString() {
 			return "<native fn>";
 		}
 
@@ -352,7 +352,7 @@ namespace Interpreter {
 			return s;
 		}
 
-		public string toString() {
+		public override string ToString() {
 			return "<native fn>";
 		}
 
@@ -367,7 +367,39 @@ namespace Interpreter {
 			return inter.getType(args[0], T);
 		}
 
-		public string toString() {
+		public override string ToString() {
+			return "<native fn>";
+		}
+	}
+
+	class toNumber : LoxCallable {
+		public int arity() {
+			return 1;
+		}
+
+		public object call(interpreter inter, List<object> args, token T) {
+			if(args[0] is string){
+				return Convert.ToDouble(args[0]);
+			} else {
+				throw new RuntimeError(T, "Couldn't convert the value to a number.");
+			}
+		}
+
+		public override string ToString() {
+			return "<native fn>";
+		}
+	}
+
+	class loxToString : LoxCallable {
+		public int arity() {
+			return 1;
+		}
+
+		public object call(interpreter inter, List<object> args, token T) {
+			return args[0].ToString();
+		}
+
+		public override string ToString() {
 			return "<native fn>";
 		}
 	}

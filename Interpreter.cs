@@ -17,6 +17,8 @@ namespace Interpreter {
 			globals.define("systemReadLine", new readLineClass());
 			globals.define("systemReadFile", new readFileClass());
 			globals.define("getType", new getType());
+			globals.define("toNumber", new toNumber());
+			globals.define("toString", new loxToString());
 
 			//type classes
 			globals.define("List", new loxListClass("List", null, new Dictionary<string, loxFunction>(), convertNativeFunc));
@@ -479,6 +481,7 @@ namespace Interpreter {
 					foreachArray(inst, statement);
 					break;
 				case InstanceType.DICTIONARY:
+					foreachHash(inst, statement);
 					break;
 				default:
 					throw new RuntimeError(statement.keyword, "'foreach' Can only iterate over collections.");
@@ -506,13 +509,25 @@ namespace Interpreter {
 
 		private void foreachArray(loxInstance inst, foreachStmt statement) {
 			object tempArr;
-			//since ___loxInternalList is a property that people can change, we need to make sure it's still there
+			//since ___loxInternalArray is a property that people can change, we need to make sure it's still there
 			if(!inst.fields.TryGetValue("___loxInternalArray", out tempArr)) {
 				throw new RuntimeError(statement.keyword, "Does not contain a array.");
 			}
 			object[] internalArray = (object[])tempArr;
 			foreach(object o in internalArray) {
 				Enviroment.define(statement.declaration.lexeme, o);
+				execute(statement.body);
+			}
+		}
+		private void foreachHash(loxInstance inst, foreachStmt statement) {
+			object tempHash;
+			//since ___loxInternalHash is a property that people can change, we need to make sure it's still there
+			if(!inst.fields.TryGetValue("___loxInternalHash", out tempHash)) {
+				throw new RuntimeError(statement.keyword, "Does not contain a hash.");
+			}
+			Dictionary<object, object> internalHash = (Dictionary<object, object>)tempHash;
+			foreach(var o in internalHash) {
+				Enviroment.define(statement.declaration.lexeme, o.Value);
 				execute(statement.body);
 			}
 		}

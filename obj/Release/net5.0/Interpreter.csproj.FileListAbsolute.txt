@@ -1,0 +1,15 @@
+C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\bin\Release\net5.0\Interpreter.exe
+C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\bin\Release\net5.0\Interpreter.deps.json
+C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\bin\Release\net5.0\Interpreter.runtimeconfig.json
+C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\bin\Release\net5.0\Interpreter.runtimeconfig.dev.json
+C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\bin\Release\net5.0\Interpreter.dll
+C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\bin\Release\net5.0\ref\Interpreter.dll
+C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\bin\Release\net5.0\Interpreter.pdb
+C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\obj\Release\net5.0\Interpreter.GeneratedMSBuildEditorConfig.editorconfig
+C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\obj\Release\net5.0\Interpreter.AssemblyInfoInputs.cache
+C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\obj\Release\net5.0\Interpreter.AssemblyInfo.cs
+C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\obj\Release\net5.0\Interpreter.csproj.CoreCompileInputs.cache
+C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\obj\Release\net5.0\Interpreter.dll
+C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\obj\Release\net5.0\ref\Interpreter.dll
+C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\obj\Release\net5.0\Interpreter.pdb
+C:\ProjektiAndrea\Interpreter\Interpreter\Interpreter\obj\Release\net5.0\Interpreter.genruntimeconfig.cache

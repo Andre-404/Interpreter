@@ -1,0 +1,5 @@
+C:\Users\andre\Andrea\Interpreter.exe
+C:\Users\andre\Andrea\Interpreter.dll
+C:\Users\andre\Andrea\Interpreter.deps.json
+C:\Users\andre\Andrea\Interpreter.runtimeconfig.json
+C:\Users\andre\Andrea\Interpreter.pdb

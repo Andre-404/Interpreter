@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Interpreter {
 	class resolver : stmt.visitor<object>, expr.visitor<object> {
 		private interpreter Interpreter;
-		private Stack<Dictionary<string, bool>> scopes = new Stack<Dictionary<string, bool>>();
+		public Stack<Dictionary<string, bool>> scopes = new Stack<Dictionary<string, bool>>();
 		private FunctionType currentFunc = FunctionType.NONE;
 		private ClassType currentClass = ClassType.NONE;
 

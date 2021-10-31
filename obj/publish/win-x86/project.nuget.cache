@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "1Cnte5bY9WSXh3CEt+MEByNbXuVwwHfq1naHp+0XRJiIq/6rHR9ajuqBrD/Ghr+dcVvzEzJh+TUCmSq/S6hhJg==",
+  "success": true,
+  "projectFilePath": "C:\\ProjektiAndrea\\Interpreter\\Interpreter\\Interpreter\\Interpreter.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\andre\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x86\\5.0.11\\microsoft.netcore.app.runtime.win-x86.5.0.11.nupkg.sha512",
+    "C:\\Users\\andre\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x86\\5.0.11\\microsoft.windowsdesktop.app.runtime.win-x86.5.0.11.nupkg.sha512",
+    "C:\\Users\\andre\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x86\\5.0.11\\microsoft.aspnetcore.app.runtime.win-x86.5.0.11.nupkg.sha512"
+  ],
+  "logs": []
+}

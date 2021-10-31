@@ -1,0 +1,6 @@
+C:\Users\andre\Andrea\Inter\Interpreter.pdb
+C:\Users\andre\Andrea\Inter\clrcompression.dll
+C:\Users\andre\Andrea\Inter\clrjit.dll
+C:\Users\andre\Andrea\Inter\coreclr.dll
+C:\Users\andre\Andrea\Inter\mscordaccore.dll
+C:\Users\andre\Andrea\Inter\Interpreter.exe

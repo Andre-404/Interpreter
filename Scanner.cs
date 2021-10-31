@@ -7,7 +7,7 @@ using System.Globalization;
 
 namespace Interpreter {
 	partial class scanner {
-		private string source;
+		public string source;
 		private List<token> tokens = new List<token>();
 		private int start = 0;
 		private int current = 0;
@@ -38,6 +38,10 @@ namespace Interpreter {
 		}
 
 		public List<token> scanTokens() {
+			tokens = new List<token>();
+			start = 0;
+			current = 0;
+			line = 1;
 			//scans every character in the source code string
 			while(!isAtEnd()) {
 				start = current;
@@ -83,7 +87,7 @@ namespace Interpreter {
 					addToken(TokenType.SEMICOLON);
 					break;
 				case '*':
-					addToken(TokenType.STAR);
+					addToken(match('=') ? TokenType.STAR_EQUALS : TokenType.STAR);
 					break;
 				case ':':
 					addToken(TokenType.COLON);
@@ -110,8 +114,10 @@ namespace Interpreter {
 					if(match('/')) {
 						// A comment goes until the end of the line.
 						while(peek() != '\n' && !isAtEnd()) nextChar();
+					} else if(match('*')){
+						while(!(peek() == '*' && peekNext() =='/') && !isAtEnd()) nextChar();
 					} else {
-						addToken(TokenType.SLASH);
+						addToken(match('=') ? TokenType.SLASH_EQUALS : TokenType.SLASH);
 					}
 					break;
 				case ' ':
@@ -132,7 +138,11 @@ namespace Interpreter {
 						generateNumber();
 					} else if(isAlpha(c)) {
 						generateIdentifier();
-					} else{
+					} else if(c == '&' && match('&')){
+						addToken(TokenType.AND);
+					} else if(c == '|' && match('|')) {
+						addToken(TokenType.OR);
+					} else {
 						Lox.error(line, "Unexpected character: " + "'" + c.ToString() + "'.");
 					}
 					break;
